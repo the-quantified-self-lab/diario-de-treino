@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Diário de Treino</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#6d28d9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Treino">
+<link rel="apple-touch-icon" href="./icon-180.png">
+<link rel="icon" type="image/png" href="./icon-192.png">
+<style>
+:root{
+  --bg:#f8fafc; --fg:#1e293b; --muted:#64748b; --line:#e2e8f0; --line2:#cbd5e1; --white:#fff;
+  --slate-50:#f8fafc; --slate-100:#f1f5f9; --slate-200:#e2e8f0; --slate-300:#cbd5e1; --slate-400:#94a3b8; --slate-500:#64748b; --slate-600:#475569; --slate-700:#334155; --slate-800:#1e293b;
+  --green-50:#f0fdf4; --green-100:#dcfce7; --green-300:#86efac; --green-500:#22c55e; --green-700:#15803d; --green-900:#14532d;
+  --red-50:#fef2f2; --red-100:#fee2e2; --red-300:#fca5a5; --red-500:#ef4444; --red-700:#b91c1c; --red-900:#7f1d1d;
+  --amber-50:#fffbeb; --amber-100:#fef3c7; --amber-300:#fcd34d; --amber-400:#fbbf24; --amber-500:#f59e0b; --amber-700:#b45309; --amber-900:#78350f;
+  --emerald-50:#ecfdf5; --emerald-100:#d1fae5; --emerald-200:#a7f3d0; --emerald-300:#6ee7b7; --emerald-400:#34d399; --emerald-700:#047857; --emerald-900:#064e3b;
+  --violet-50:#f5f3ff; --violet-100:#ede9fe; --violet-200:#ddd6fe; --violet-300:#c4b5fd; --violet-400:#a78bfa; --violet-700:#6d28d9; --violet-900:#4c1d95;
+  --sky-100:#e0f2fe; --sky-300:#7dd3fc; --sky-900:#0c4a6e;
+  --rose-100:#ffe4e6; --rose-300:#fda4af; --rose-900:#881337;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.4}
+.app{max-width:880px;margin:0 auto;padding:16px;padding-top:calc(16px + env(safe-area-inset-top));padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:var(--white);border:1px solid var(--slate-300);border-radius:4px;padding:6px 10px}
+button:hover{background:var(--slate-100)}
+input,select,textarea{padding:6px 8px;border:1px solid var(--slate-300);border-radius:4px;background:var(--white)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--violet-300);outline-offset:-1px}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.muted{color:var(--muted)}
+.tiny{font-size:11px}.small{font-size:12px}.bold{font-weight:600}
+.flex1{flex:1;min-width:0}
+.hidden{display:none!important}
+.mt2{margin-top:8px}.mt3{margin-top:12px}.mb2{margin-bottom:8px}.mb3{margin-bottom:12px}.mb4{margin-bottom:16px}
+
+.header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.header h1{font-size:18px;margin:0}
+.header .nav{display:flex;align-items:center;gap:6px}
+.icon-btn{padding:6px;line-height:0}
+.icon-btn svg{display:block}
+
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;padding:12px;border:1px solid var(--slate-200);border-radius:8px;background:var(--white);margin-bottom:14px}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font-size:11px;color:var(--slate-600);font-weight:600}
+.field input,.field select{height:34px}
+.w-treino select{min-width:230px;font-weight:600}
+.w-num input{width:96px;text-align:center}
+
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+@media(max-width:640px){.summary-grid{grid-template-columns:repeat(2,1fr)}}
+.kpi{padding:10px 12px;border:1px solid var(--slate-200);border-radius:6px;background:var(--white)}
+.kpi .lab{font-size:11px;color:var(--slate-600)}
+.kpi .val{font-size:18px;font-weight:600;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;margin-top:2px}
+.kpi.vol{background:var(--violet-50);border-color:var(--violet-200)}
+.kpi.vol .val{color:var(--violet-700)}
+.kpi.feitos{background:var(--emerald-50);border-color:var(--emerald-200)}
+
+.grupo-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid var(--slate-300);background:var(--slate-100);color:var(--slate-700);text-transform:uppercase;letter-spacing:.03em;font-weight:600}
+
+.ex{border:1px solid var(--slate-200);border-left:4px solid var(--violet-300);border-radius:0 6px 6px 0;padding:12px;margin-bottom:10px;background:var(--white)}
+.ex.pulado{opacity:.55;border-left-color:var(--slate-400);background:var(--slate-50)}
+.ex.preenchido{border-left-color:var(--emerald-400)}
+.ex .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.ex .nome{font-weight:600;font-size:15px}
+.ex .alvo{font-size:12px;color:var(--slate-500);margin-top:2px}
+.ex .ult{font-size:12px;margin-top:6px;padding:5px 8px;border-radius:4px;background:var(--amber-50);border:1px solid var(--amber-300);color:var(--amber-900)}
+.ex .ult.none{background:var(--slate-50);border-color:var(--slate-200);color:var(--slate-500)}
+
+.sets{margin-top:10px;display:flex;flex-direction:column;gap:5px}
+.set-head,.set-row{display:grid;grid-template-columns:34px 1fr 1fr 30px;gap:8px;align-items:center}
+.set-head{font-size:10px;color:var(--slate-500);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+.set-row .n{font-size:12px;color:var(--slate-500);text-align:center;font-family:ui-monospace,monospace}
+.set-row input{height:32px;text-align:center}
+.set-row .del{padding:4px;line-height:0;color:var(--red-500);border-color:transparent;background:transparent}
+.set-row .del:hover{background:var(--red-50)}
+.set-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.set-actions button{font-size:12px;padding:4px 8px}
+
+.ex .obs{margin-top:8px}
+.ex .obs textarea{width:100%;min-height:34px;resize:vertical}
+.ex .obs textarea.warn{border-color:var(--amber-500);background:var(--amber-50)}
+.ex .ex-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap}
+.ex .ex-vol{font-size:11px;color:var(--slate-500);font-family:ui-monospace,monospace}
+.toggle-pular{font-size:11px;padding:3px 8px}
+
+.hist-link{font-size:11px;color:var(--violet-700);background:transparent;border:none;padding:2px 4px;text-decoration:underline}
+.hist-box{margin-top:6px;font-size:12px;border:1px dashed var(--slate-300);border-radius:4px;padding:6px 8px;background:var(--slate-50)}
+.hist-box .h-row{display:flex;justify-content:space-between;gap:8px;padding:2px 0;border-bottom:1px solid var(--slate-200)}
+.hist-box .h-row:last-child{border-bottom:none}
+.hist-box .h-data{color:var(--slate-500);font-family:ui-monospace,monospace}
+
+.extras-add{margin-top:6px}
+.sec-title{font-size:13px;font-weight:600;color:var(--slate-700);margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+.sec-title::after{content:"";flex:1;height:1px;background:var(--slate-200)}
+
+.obs-dia textarea{width:100%;min-height:60px;resize:vertical}
+.descanso-box{padding:16px;border:1px dashed var(--sky-300);border-radius:8px;background:var(--sky-100);color:var(--sky-900);font-size:13px}
+
+.foot{margin-top:24px;padding-top:12px;border-top:1px solid var(--slate-200);font-size:12px;color:var(--slate-500);display:flex;gap:8px;align-items:flex-start}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.toolbar button{font-size:12px;display:flex;align-items:center;gap:5px}
+
+/* calendar */
+.cal-wrap{position:relative}
+.cal-pop{position:absolute;top:calc(100% + 4px);right:0;z-index:50;background:var(--white);border:1px solid var(--slate-300);border-radius:6px;padding:10px;box-shadow:0 4px 16px rgba(0,0,0,.08);min-width:250px}
+.cal-pop .cnav{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-grid .dow{font-size:10px;color:var(--slate-500);text-align:center;padding:2px}
+.cal-day{position:relative;padding:6px 0;border:1px solid transparent;border-radius:4px;text-align:center;font-size:12px;cursor:pointer;background:transparent}
+.cal-day:hover{background:var(--slate-100)}
+.cal-day.outside{color:var(--slate-300)}
+.cal-day.today{font-weight:700;border-color:var(--violet-300)}
+.cal-day.selected{background:var(--violet-100);border-color:var(--violet-400)}
+.cal-day .dot{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--emerald-500)}
+
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--slate-800);color:#fff;padding:9px 16px;border-radius:6px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:200}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+// ============================================================
+// PROGRAMA — edite aqui e as mudanças valem para sessões novas.
+// Dados já registrados ficam atrelados ao id do exercício, então
+// continuam salvos mesmo que você troque o nome/alvo depois.
+// ============================================================
+const PROGRAMA = {
+  push: { label:"Push — Peito · Ombro · Tríceps", ex:[
+    {id:"push_supino_reto",       nome:"Supino reto (barra ou halteres)",            series:4, min:6,  max:10, grupo:"Peito"},
+    {id:"push_supino_inclinado",  nome:"Supino inclinado com halteres",              series:3, min:8,  max:12, grupo:"Peito"},
+    {id:"push_crucifixo",         nome:"Crucifixo (máquina, cabo ou halter)",        series:3, min:12, max:15, grupo:"Peito"},
+    {id:"push_desenvolvimento",   nome:"Desenvolvimento de ombros (halteres/máq.)",  series:3, min:8,  max:12, grupo:"Ombro"},
+    {id:"push_elev_lateral",      nome:"Elevação lateral",                           series:4, min:12, max:20, grupo:"Ombro"},
+    {id:"push_triceps_polia",     nome:"Tríceps na polia (corda ou barra)",          series:3, min:10, max:15, grupo:"Tríceps"},
+    {id:"push_triceps_testa",     nome:"Tríceps testa ou francês",                   series:2, min:10, max:15, grupo:"Tríceps"},
+  ]},
+  pull: { label:"Pull — Costas · Delt. posterior · Bíceps", ex:[
+    {id:"pull_puxada_aberta",     nome:"Puxada alta — pegada aberta pronada",        series:4, min:8,  max:12, grupo:"Costas"},
+    {id:"pull_remada_curvada",    nome:"Remada curvada com barra (ou máquina)",      series:4, min:8,  max:12, grupo:"Costas"},
+    {id:"pull_remada_unilateral", nome:"Remada unilateral com halter (serrote)",     series:3, min:10, max:12, grupo:"Costas"},
+    {id:"pull_pullover",          nome:"Pullover na polia (braço estendido)",        series:2, min:12, max:15, grupo:"Costas"},
+    {id:"pull_crucifixo_inv",     nome:"Crucifixo invertido ou Face pull",           series:3, min:15, max:20, grupo:"Delt. post."},
+    {id:"pull_rosca_direta",      nome:"Rosca direta com barra",                     series:3, min:8,  max:12, grupo:"Bíceps"},
+    {id:"pull_rosca_alternada",   nome:"Rosca alternada ou inclinada",               series:2, min:10, max:15, grupo:"Bíceps"},
+  ]},
+  legs: { label:"Legs — Quadríceps · Posterior · Glúteo · Panturrilha", ex:[
+    {id:"legs_agachamento",       nome:"Agachamento livre (ou hack)",                series:4, min:6,  max:10, grupo:"Quadríceps"},
+    {id:"legs_leg_press",         nome:"Leg press",                                  series:3, min:10, max:15, grupo:"Quadríceps"},
+    {id:"legs_extensora",         nome:"Cadeira extensora",                          series:3, min:12, max:15, grupo:"Quadríceps"},
+    {id:"legs_stiff",             nome:"Stiff (ou mesa flexora)",                    series:4, min:8,  max:12, grupo:"Posterior"},
+    {id:"legs_hip_thrust",        nome:"Elevação pélvica / Hip thrust",              series:3, min:10, max:12, grupo:"Glúteo"},
+    {id:"legs_pant_pe",           nome:"Panturrilha em pé",                          series:4, min:10, max:15, grupo:"Panturrilha"},
+    {id:"legs_pant_sentado",      nome:"Panturrilha sentado",                        series:2, min:15, max:20, grupo:"Panturrilha"},
+  ]},
+  upper: { label:"Upper — Superior completo", ex:[
+    {id:"upper_supino_inclinado", nome:"Supino inclinado (barra ou máquina)",        series:4, min:8,  max:12, grupo:"Peito"},
+    {id:"upper_remada_maquina",   nome:"Remada na máquina (ou cavalinho)",           series:4, min:8,  max:12, grupo:"Costas"},
+    {id:"upper_puxada_neutra",    nome:"Puxada alta — pegada neutra/supinada",       series:3, min:10, max:12, grupo:"Costas"},
+    {id:"upper_elev_lateral",     nome:"Elevação lateral",                           series:4, min:12, max:20, grupo:"Ombro"},
+    {id:"upper_crucifixo",        nome:"Crucifixo ou Cross-over",                    series:3, min:12, max:15, grupo:"Peito"},
+    {id:"upper_rosca_direta",     nome:"Rosca direta",                               series:3, min:8,  max:12, grupo:"Bíceps"},
+    {id:"upper_triceps_polia",    nome:"Tríceps na polia",                           series:3, min:10, max:15, grupo:"Tríceps"},
+  ]},
+  lower: { label:"Lower — Pernas (dose 2) · Abdômen", ex:[
+    {id:"lower_bulgaro",          nome:"Agachamento búlgaro (ou leg press)",         series:4, min:8,  max:12, grupo:"Quadríceps"},
+    {id:"lower_extensora",        nome:"Cadeira extensora",                          series:3, min:12, max:15, grupo:"Quadríceps"},
+    {id:"lower_flexora",          nome:"Mesa flexora (ou stiff)",                    series:4, min:10, max:12, grupo:"Posterior"},
+    {id:"lower_adutora",          nome:"Cadeira adutora / abdutora (opcional)",      series:2, min:15, max:20, grupo:"Glúteo"},
+    {id:"lower_panturrilha",      nome:"Panturrilha em pé",                          series:4, min:12, max:15, grupo:"Panturrilha"},
+    {id:"lower_abdominal",        nome:"Elevação de pernas (abdômen inferior)",      series:3, min:12, max:15, grupo:"Abdômen"},
+    {id:"lower_prancha",          nome:"Prancha (reps = segundos, até a falha)",     series:3, min:0,  max:0,  grupo:"Abdômen"},
+  ]},
+  descanso: { label:"Descanso / Cardio", ex:[] },
+};
+
+// Sugestão por dia da semana (Seg Push, Ter Pull, Qua Legs, Qui Desc, Sex Upper, Sáb Lower, Dom Desc)
+const SUGESTAO_SEMANA = {1:"push",2:"pull",3:"legs",4:"descanso",5:"upper",6:"lower",0:"descanso"};
+const SCHEMA_VERSION = 1;
+
+// ============================================================
+// HELPERS
+// ============================================================
+const el = (tag, attrs={}, children=[]) => {
+  const e = document.createElement(tag);
+  for (const k in attrs){
+    if (k==="class") e.className = attrs[k];
+    else if (k==="html") e.innerHTML = attrs[k];
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), attrs[k]);
+    else if (k==="value") e.value = attrs[k];
+    else if (k==="checked") e.checked = !!attrs[k];
+    else if (attrs[k]!=null) e.setAttribute(k, attrs[k]);
+  }
+  for (const c of [].concat(children)){ if(c==null) continue; e.appendChild(typeof c==="string"?document.createTextNode(c):c); }
+  return e;
+};
+const hojeISO = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+const diaDaSemana = (iso) => new Date(iso+"T00:00:00").getDay();
+const brData = (iso) => { const [y,m,d]=iso.split("-"); return `${d}/${m}`; };
+const brDataFull = (iso) => { const [y,m,d]=iso.split("-"); return `${d}/${m}/${y}`; };
+const DOWS = ["dom","seg","ter","qua","qui","sex","sáb"];
+const num = (v) => { const n = parseFloat(String(v).replace(",",".")); return isNaN(n)?0:n; };
+
+// ============================================================
+// STORAGE — IndexedDB (mesma estratégia do Gerenciador de Rotina)
+// ============================================================
+const DB_NAME="diario_treino", DB_VERSION=1, STORE="sessoes";
+let _dbPromise=null;
+const openDB = () => {
+  if(_dbPromise) return _dbPromise;
+  _dbPromise = new Promise((resolve,reject)=>{
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => { const db=req.result; if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE,{keyPath:"date"}); };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  return _dbPromise;
+};
+const dbPut = async (data) => { const db=await openDB(); return new Promise((res,rej)=>{const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(data);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);}); };
+const dbDelete = async (date) => { const db=await openDB(); return new Promise((res,rej)=>{const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).delete(date);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);}); };
+const dbGet = async (date) => { const db=await openDB(); return new Promise((res,rej)=>{const r=db.transaction(STORE,"readonly").objectStore(STORE).get(date);r.onsuccess=()=>res(r.result||null);r.onerror=()=>rej(r.error);}); };
+const dbGetAll = async () => { const db=await openDB(); return new Promise((res,rej)=>{const r=db.transaction(STORE,"readonly").objectStore(STORE).getAll();r.onsuccess=()=>res((r.result||[]).sort((a,b)=>a.date.localeCompare(b.date)));r.onerror=()=>rej(r.error);}); };
+
+const sessaoVazia = (date) => ({
+  date, treino: SUGESTAO_SEMANA[diaDaSemana(date)] || "push",
+  peso_corporal:"", duracao_min:"", observacao:"",
+  ex:{}, extras:[],
+});
+
+// ============================================================
+// EXPORT / IMPORT
+// ============================================================
+const downloadBlob = (blob, filename) => {
+  const url=URL.createObjectURL(blob); const a=document.createElement("a");
+  a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+const exportarJSON = async (auto=false) => {
+  const todas = await dbGetAll();
+  const payload = {exported_at:new Date().toISOString(), schema_version:SCHEMA_VERSION, app:"diario_treino", sessoes:todas};
+  const blob = new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  downloadBlob(blob, `${auto?"treino_autobackup_":"treino_backup_"}${hojeISO()}.json`);
+  return todas.length;
+};
+const csvEscape = (v) => { if(v==null) return ""; const s=String(v); return /[",\n;]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; };
+const exportarCSV = async () => {
+  const todas = await dbGetAll();
+  const header = ["date","dia_semana","treino","exercicio_id","exercicio_nome","grupo","tipo","serie_n","carga_kg","reps","volume_kg","alvo_series","alvo_rep_min","alvo_rep_max","pulado","obs_exercicio","peso_corporal","duracao_min","obs_sessao"];
+  const linhas = [header.join(",")];
+  for (const s of todas){
+    const tpl = PROGRAMA[s.treino]; const dow = DOWS[diaDaSemana(s.date)];
+    const prescritos = tpl ? tpl.ex : [];
+    const linhasSessao = [];
+    prescritos.forEach(meta=>{
+      const dd = (s.ex||{})[meta.id] || {sets:[],obs:"",pulado:false};
+      const sets = dd.sets&&dd.sets.length?dd.sets:[null];
+      sets.forEach((st,i)=>{
+        linhasSessao.push([s.date,dow,s.treino,meta.id,meta.nome,meta.grupo,"prescrito",i+1,
+          st?st.carga:"",st?st.reps:"", st?(num(st.carga)*num(st.reps)||""):"",
+          meta.series,meta.min,meta.max, dd.pulado?"sim":"nao", dd.obs||"", s.peso_corporal||"", s.duracao_min||"", s.observacao||""]);
+      });
+    });
+    (s.extras||[]).forEach(( extra,ei)=>{
+      const sets = extra.sets&&extra.sets.length?extra.sets:[null];
+      sets.forEach((st,i)=>{
+        linhasSessao.push([s.date,dow,s.treino,"extra_"+ei,extra.nome,extra.grupo||"Extra","extra",i+1,
+          st?st.carga:"",st?st.reps:"", st?(num(st.carga)*num(st.reps)||""):"", "","","","nao",extra.obs||"",s.peso_corporal||"",s.duracao_min||"",s.observacao||""]);
+      });
+    });
+    if(!linhasSessao.length){ // sessão de descanso / vazia
+      linhasSessao.push([s.date,dow,s.treino,"","","","sessao","","","","","","","","nao","",s.peso_corporal||"",s.duracao_min||"",s.observacao||""]);
+    }
+    linhasSessao.forEach(a=>linhas.push(a.map(csvEscape).join(",")));
+  }
+  const blob = new Blob(["\ufeff"+linhas.join("\n")],{type:"text/csv;charset=utf-8"});
+  downloadBlob(blob, `treino_${hojeISO()}.csv`);
+  return todas.length;
+};
+const importarJSON = (file) => new Promise((resolve,reject)=>{
+  const r=new FileReader();
+  r.onload = async (ev)=>{
+    try{
+      const data = JSON.parse(ev.target.result);
+      const arr = data.sessoes || data.dias || (Array.isArray(data)?data:null);
+      if(!arr) throw new Error("formato inválido (sem campo 'sessoes')");
+      let n=0; for(const s of arr){ if(s.date){ await dbPut(s); n++; } }
+      resolve(n);
+    }catch(e){ reject(e); }
+  };
+  r.onerror = ()=>reject(r.error); r.readAsText(file);
+});
+const AUTOBACKUP_KEY="diario_treino_last_autobackup";
+const checkAutoBackup = async () => {
+  const hoje=hojeISO(); if(localStorage.getItem(AUTOBACKUP_KEY)===hoje) return;
+  const todas=await dbGetAll(); if(!todas.length) return;
+  await exportarJSON(true); localStorage.setItem(AUTOBACKUP_KEY,hoje);
+  toast("Backup automático diário baixado.");
+};
+
+// ============================================================
+// PROGRESSÃO — última vez que este exercício foi feito (antes da data atual)
+// ============================================================
+function ultimaVez(exId, beforeDate){
+  let melhor=null;
+  for(const s of state.cache){
+    if(s.date>=beforeDate) continue;
+    const dd=(s.ex||{})[exId];
+    if(dd && dd.sets && dd.sets.some(x=>num(x.reps)>0 || num(x.carga)>0)){
+      if(!melhor || s.date>melhor.date) melhor={date:s.date, sets:dd.sets};
+    }
+  }
+  return melhor;
+}
+function historicoExercicio(exId, beforeDate, limite=6){
+  const out=[];
+  for(const s of state.cache){
+    if(s.date>=beforeDate) continue;
+    const dd=(s.ex||{})[exId];
+    if(dd && dd.sets && dd.sets.some(x=>num(x.reps)>0 || num(x.carga)>0)) out.push({date:s.date, sets:dd.sets});
+  }
+  out.sort((a,b)=>b.date.localeCompare(a.date));
+  return out.slice(0,limite);
+}
+function fmtSets(sets){
+  const val = sets.filter(x=>num(x.reps)>0||num(x.carga)>0);
+  if(!val.length) return "—";
+  const cargas = val.map(x=>num(x.carga));
+  const todasIguais = cargas.every(c=>c===cargas[0]);
+  if(todasIguais && cargas[0]>0) return `${cargas[0]}kg → ${val.map(x=>x.reps||"0").join(", ")}`;
+  return val.map(x=>`${x.carga||"0"}×${x.reps||"0"}`).join(", ");
+}
+function volumeSessao(s){
+  let vol=0, setsCount=0;
+  const tpl=PROGRAMA[s.treino];
+  if(tpl) tpl.ex.forEach(m=>{ const dd=(s.ex||{})[m.id]; if(dd&&dd.sets) dd.sets.forEach(st=>{ const v=num(st.carga)*num(st.reps); if(num(st.reps)>0){setsCount++; vol+=v;} }); });
+  (s.extras||[]).forEach(e=>{ (e.sets||[]).forEach(st=>{ if(num(st.reps)>0){ setsCount++; vol+=num(st.carga)*num(st.reps);} }); });
+  return {vol, setsCount};
+}
+
+// ============================================================
+// STATE + SAVE
+// ============================================================
+const state = { date: hojeISO(), sessao:null, cache:[], calOpen:false, calMonth:null };
+let saveTimer=null;
+function scheduleSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(async()=>{ await dbPut(state.sessao); const i=state.cache.findIndex(s=>s.date===state.sessao.date); if(i>=0) state.cache[i]=JSON.parse(JSON.stringify(state.sessao)); else state.cache.push(JSON.parse(JSON.stringify(state.sessao))); refreshKPIs(); }, 350); }
+
+function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2200); }
+
+// ============================================================
+// ICONS
+// ============================================================
+const svg=(p,s=16)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const I={
+  left:svg(`<polyline points="15 18 9 12 15 6"/>`,18), right:svg(`<polyline points="9 18 15 12 9 6"/>`,18),
+  cal:svg(`<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>`,18),
+  down:svg(`<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>`,14),
+  up:svg(`<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>`,14),
+  table:svg(`<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>`,14),
+  trash:svg(`<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>`,15),
+  plus:svg(`<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>`,14),
+  alert:svg(`<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>`,15),
+};
+
+// ============================================================
+// RENDER
+// ============================================================
+const root = () => document.getElementById("app");
+
+async function changeDate(iso){
+  state.date=iso; state.calOpen=false;
+  const existing = await dbGet(iso);
+  state.sessao = existing || sessaoVazia(iso);
+  renderAll();
+}
+
+function renderAll(){
+  const a=root(); a.innerHTML="";
+  a.appendChild(renderHeader());
+  a.appendChild(renderToolbar());
+  a.appendChild(renderControls());
+  a.appendChild(renderKPIsContainer());
+  a.appendChild(renderCorpo());
+  a.appendChild(renderObsDia());
+  a.appendChild(renderFoot());
+  refreshKPIs();
+}
+
+function renderHeader(){
+  const h=el("div",{class:"header"});
+  h.appendChild(el("h1",{},"Diário de Treino"));
+  const nav=el("div",{class:"nav"});
+  nav.appendChild(el("button",{class:"icon-btn",title:"dia anterior",onclick:()=>shiftDate(-1)},[mk(I.left)]));
+  const lbl=el("button",{class:"small bold",onclick:()=>{state.calOpen=!state.calOpen; renderAll();}}, `${DOWS[diaDaSemana(state.date)]} ${brDataFull(state.date)}`);
+  const calWrap=el("div",{class:"cal-wrap"},[lbl]);
+  if(state.calOpen) calWrap.appendChild(renderCalendar());
+  nav.appendChild(calWrap);
+  nav.appendChild(el("button",{class:"icon-btn",title:"próximo dia",onclick:()=>shiftDate(1)},[mk(I.right)]));
+  nav.appendChild(el("button",{class:"small",onclick:()=>changeDate(hojeISO())},"hoje"));
+  h.appendChild(nav);
+  return h;
+}
+function mk(html){ const s=el("span"); s.innerHTML=html; return s.firstChild; }
+function shiftDate(delta){ const d=new Date(state.date+"T00:00:00"); d.setDate(d.getDate()+delta); changeDate(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`); }
+
+function renderToolbar(){
+  const t=el("div",{class:"toolbar"});
+  const expJ=el("button",{title:"Exportar todos os dados (JSON)"}); expJ.innerHTML=I.down+" JSON"; expJ.onclick=async()=>{const n=await exportarJSON(false); toast(`${n} sessões exportadas (JSON).`);};
+  const expC=el("button",{title:"Exportar para Excel/Sheets/IA (CSV)"}); expC.innerHTML=I.table+" CSV"; expC.onclick=async()=>{const n=await exportarCSV(); toast(`${n} sessões exportadas (CSV).`);};
+  const impB=el("button",{title:"Importar backup JSON"}); impB.innerHTML=I.up+" Importar";
+  const fin=el("input",{type:"file",accept:".json",class:"hidden"});
+  fin.onchange=async(e)=>{const f=e.target.files[0]; if(!f)return; try{const n=await importarJSON(f); state.cache=await dbGetAll(); await changeDate(state.date); toast(`${n} sessões importadas.`);}catch(err){alert("Erro ao importar: "+err.message);} fin.value="";};
+  impB.onclick=()=>fin.click();
+  t.appendChild(expJ); t.appendChild(expC); t.appendChild(impB); t.appendChild(fin);
+  return t;
+}
+
+function renderControls(){
+  const c=el("div",{class:"controls"});
+  // treino
+  const selWrap=el("div",{class:"field w-treino"});
+  selWrap.appendChild(el("label",{},"Treino do dia"));
+  const sel=el("select");
+  Object.entries(PROGRAMA).forEach(([k,v])=>{ const o=el("option",{value:k},v.label); if(k===state.sessao.treino)o.selected=true; sel.appendChild(o); });
+  sel.onchange=()=>{ state.sessao.treino=sel.value; scheduleSave(); renderAll(); };
+  selWrap.appendChild(sel); c.appendChild(selWrap);
+  // peso corporal
+  const pcWrap=el("div",{class:"field w-num"});
+  pcWrap.appendChild(el("label",{},"Peso corporal (kg)"));
+  const pc=el("input",{type:"text",inputmode:"decimal",placeholder:"62.5",value:state.sessao.peso_corporal});
+  pc.oninput=()=>{state.sessao.peso_corporal=pc.value; scheduleSave();};
+  pcWrap.appendChild(pc); c.appendChild(pcWrap);
+  // duração
+  const duWrap=el("div",{class:"field w-num"});
+  duWrap.appendChild(el("label",{},"Duração (min)"));
+  const du=el("input",{type:"text",inputmode:"numeric",placeholder:"75",value:state.sessao.duracao_min});
+  du.oninput=()=>{state.sessao.duracao_min=du.value; scheduleSave();};
+  duWrap.appendChild(du); c.appendChild(duWrap);
+  return c;
+}
+
+function renderKPIsContainer(){ return el("div",{class:"summary-grid",id:"kpis"}); }
+function refreshKPIs(){
+  const box=document.getElementById("kpis"); if(!box) return; box.innerHTML="";
+  const {vol,setsCount}=volumeSessao(state.sessao);
+  const tpl=PROGRAMA[state.sessao.treino];
+  const prescritos=tpl?tpl.ex.length:0;
+  let feitos=0, pulados=0;
+  if(tpl) tpl.ex.forEach(m=>{ const dd=(state.sessao.ex||{})[m.id]; if(dd&&dd.pulado)pulados++; else if(dd&&dd.sets&&dd.sets.some(x=>num(x.reps)>0))feitos++; });
+  const kpi=(lab,val,cls="")=>{ const k=el("div",{class:"kpi "+cls}); k.appendChild(el("div",{class:"lab"},lab)); k.appendChild(el("div",{class:"val"},val)); return k; };
+  box.appendChild(kpi("Séries registradas", String(setsCount)));
+  box.appendChild(kpi("Volume total (kg)", vol?vol.toLocaleString("pt-BR"):"0","vol"));
+  box.appendChild(kpi("Exercícios feitos", prescritos?`${feitos}/${prescritos}`:"—","feitos"));
+  box.appendChild(kpi("Duração", state.sessao.duracao_min?state.sessao.duracao_min+" min":"—"));
+}
+
+function renderCorpo(){
+  const tpl=PROGRAMA[state.sessao.treino];
+  const wrap=el("div",{});
+  if(!tpl || !tpl.ex.length){
+    wrap.appendChild(el("div",{class:"descanso-box"},"Dia de descanso ou cardio. Sem exercícios prescritos — use o campo de observações abaixo para registrar cardio (tipo, tempo), peso corporal, sono ou como você se sente. Você ainda pode adicionar exercícios avulsos."));
+    wrap.appendChild(renderExtras());
+    return wrap;
+  }
+  wrap.appendChild(el("div",{class:"sec-title"},tpl.label));
+  tpl.ex.forEach(meta=> wrap.appendChild(buildExCard(meta)));
+  wrap.appendChild(renderExtras());
+  return wrap;
+}
+
+function getExData(exId){
+  if(!state.sessao.ex[exId]) state.sessao.ex[exId]={sets:[],obs:"",pulado:false};
+  return state.sessao.ex[exId];
+}
+
+function buildExCard(meta){
+  const dd=getExData(meta.id);
+  const preenchido = dd.sets.some(x=>num(x.reps)>0||num(x.carga)>0);
+  const card=el("div",{class:"ex"+(dd.pulado?" pulado":(preenchido?" preenchido":""))});
+
+  // topo
+  const top=el("div",{class:"top"});
+  const left=el("div",{});
+  left.appendChild(el("div",{class:"nome"},meta.nome));
+  const alvo = (meta.min===0&&meta.max===0)?`${meta.series} × máx`:`${meta.series} × ${meta.min}-${meta.max}`;
+  left.appendChild(el("div",{class:"alvo"},`Alvo: ${alvo} reps`));
+  top.appendChild(left);
+  top.appendChild(el("span",{class:"grupo-badge"},meta.grupo));
+  card.appendChild(top);
+
+  // última vez
+  const uv=ultimaVez(meta.id, state.date);
+  const ult=el("div",{class:"ult"+(uv?"":" none")});
+  ult.innerHTML = uv ? `<b>Última vez (${brData(uv.date)}):</b> ${fmtSets(uv.sets)} &nbsp;·&nbsp; <i>meta: superar isto</i>` : "Primeira vez registrando este exercício.";
+  card.appendChild(ult);
+
+  if(!dd.pulado){
+    // sets
+    const sets=el("div",{class:"sets"});
+    const head=el("div",{class:"set-head"});
+    head.appendChild(el("div",{},"#")); head.appendChild(el("div",{},"Carga (kg)")); head.appendChild(el("div",{},"Reps")); head.appendChild(el("div",{},""));
+    sets.appendChild(head);
+    if(!dd.sets.length){ for(let i=0;i<meta.series;i++) dd.sets.push({carga:"",reps:""}); }
+    dd.sets.forEach((st,i)=> sets.appendChild(buildSetRow(meta,dd,st,i,card)));
+    card.appendChild(sets);
+
+    const acts=el("div",{class:"set-actions"});
+    const add=el("button",{},""); add.innerHTML=I.plus+" série";
+    add.onclick=()=>{ dd.sets.push({carga:"",reps:""}); scheduleSave(); rebuildCard(meta,card); };
+    acts.appendChild(add);
+    card.appendChild(acts);
+
+    // obs
+    const obsW=el("div",{class:"obs"});
+    const ta=el("textarea",{placeholder:'Ex.: "testei 12kg, falhei na 3ª série — voltar para 10kg"'});
+    ta.value=dd.obs||""; if(dd.obs) ta.classList.add("warn");
+    ta.oninput=()=>{ dd.obs=ta.value; ta.classList.toggle("warn",!!ta.value.trim()); scheduleSave(); };
+    obsW.appendChild(ta);
+    card.appendChild(obsW);
+  }
+
+  // rodapé: volume do exercício + histórico + pular
+  const foot=el("div",{class:"ex-foot"});
+  const vol = dd.sets.reduce((a,x)=>a+(num(x.reps)>0?num(x.carga)*num(x.reps):0),0);
+  foot.appendChild(el("div",{class:"ex-vol"}, dd.pulado?"— pulado —":(vol?`volume: ${vol.toLocaleString("pt-BR")} kg`:"")));
+  const right=el("div",{class:"row"});
+  const histBtn=el("button",{class:"hist-link"},"ver evolução");
+  let histBox=null;
+  histBtn.onclick=()=>{
+    if(histBox){ histBox.remove(); histBox=null; histBtn.textContent="ver evolução"; return; }
+    const hist=historicoExercicio(meta.id, state.date);
+    histBox=el("div",{class:"hist-box"});
+    if(!hist.length) histBox.appendChild(el("div",{class:"muted tiny"},"Sem histórico anterior."));
+    else hist.forEach(h=>{ const r=el("div",{class:"h-row"}); r.appendChild(el("span",{class:"h-data"},brData(h.date))); r.appendChild(el("span",{},fmtSets(h.sets))); histBox.appendChild(r); });
+    card.appendChild(histBox); histBtn.textContent="ocultar";
+  };
+  right.appendChild(histBtn);
+  const pular=el("button",{class:"toggle-pular"}, dd.pulado?"desfazer pular":"pular exercício");
+  pular.onclick=()=>{ dd.pulado=!dd.pulado; scheduleSave(); rebuildCard(meta,card); };
+  right.appendChild(pular);
+  foot.appendChild(right);
+  card.appendChild(foot);
+
+  return card;
+}
+function rebuildCard(meta,oldCard){ const fresh=buildExCard(meta); oldCard.replaceWith(fresh); refreshKPIs(); }
+
+function buildSetRow(meta,dd,st,i,card){
+  const r=el("div",{class:"set-row"});
+  r.appendChild(el("div",{class:"n"},String(i+1)));
+  const c=el("input",{type:"text",inputmode:"decimal",placeholder:"kg",value:st.carga});
+  c.oninput=()=>{ st.carga=c.value; scheduleSave(); updVol(dd,card); };
+  const rp=el("input",{type:"text",inputmode:"numeric",placeholder:(meta.min===0?"seg":"reps"),value:st.reps});
+  rp.oninput=()=>{ st.reps=rp.value; scheduleSave(); updVol(dd,card); };
+  const del=el("button",{class:"del",title:"remover série"}); del.innerHTML=I.trash;
+  del.onclick=()=>{ dd.sets.splice(i,1); scheduleSave(); rebuildCard(meta,card); };
+  r.appendChild(c); r.appendChild(rp); r.appendChild(del);
+  return r;
+}
+function updVol(dd,card){
+  const vol=dd.sets.reduce((a,x)=>a+(num(x.reps)>0?num(x.carga)*num(x.reps):0),0);
+  const vEl=card.querySelector(".ex-vol"); if(vEl && !dd.pulado) vEl.textContent = vol?`volume: ${vol.toLocaleString("pt-BR")} kg`:"";
+  card.classList.toggle("preenchido", dd.sets.some(x=>num(x.reps)>0||num(x.carga)>0) && !dd.pulado);
+  refreshKPIs();
+}
+
+function renderExtras(){
+  const wrap=el("div",{});
+  wrap.appendChild(el("div",{class:"sec-title"},"Exercícios avulsos (adicionados por você)"));
+  (state.sessao.extras||[]).forEach((extra,idx)=> wrap.appendChild(buildExtraCard(extra,idx)));
+  const addW=el("div",{class:"extras-add"});
+  const btn=el("button",{class:"small"},""); btn.innerHTML=I.plus+" adicionar exercício avulso";
+  btn.onclick=()=>{ if(!state.sessao.extras) state.sessao.extras=[]; state.sessao.extras.push({nome:"",grupo:"",sets:[{carga:"",reps:""}],obs:""}); scheduleSave(); renderAll(); };
+  addW.appendChild(btn); wrap.appendChild(addW);
+  return wrap;
+}
+function buildExtraCard(extra,idx){
+  const card=el("div",{class:"ex"});
+  const top=el("div",{class:"top"});
+  const nm=el("input",{type:"text",placeholder:"Nome do exercício",value:extra.nome,style:"font-weight:600;min-width:200px;flex:1"});
+  nm.oninput=()=>{extra.nome=nm.value; scheduleSave();};
+  const gp=el("input",{type:"text",placeholder:"Grupo",value:extra.grupo||"",style:"width:120px"});
+  gp.oninput=()=>{extra.grupo=gp.value; scheduleSave();};
+  const rm=el("button",{class:"del",title:"remover exercício"}); rm.innerHTML=I.trash;
+  rm.onclick=()=>{ state.sessao.extras.splice(idx,1); scheduleSave(); renderAll(); };
+  top.appendChild(nm); top.appendChild(gp); top.appendChild(rm);
+  card.appendChild(top);
+
+  const sets=el("div",{class:"sets"});
+  const head=el("div",{class:"set-head"});
+  head.appendChild(el("div",{},"#")); head.appendChild(el("div",{},"Carga (kg)")); head.appendChild(el("div",{},"Reps")); head.appendChild(el("div",{},""));
+  sets.appendChild(head);
+  extra.sets.forEach((st,i)=>{
+    const r=el("div",{class:"set-row"});
+    r.appendChild(el("div",{class:"n"},String(i+1)));
+    const c=el("input",{type:"text",inputmode:"decimal",placeholder:"kg",value:st.carga}); c.oninput=()=>{st.carga=c.value; scheduleSave();};
+    const rp=el("input",{type:"text",inputmode:"numeric",placeholder:"reps",value:st.reps}); rp.oninput=()=>{st.reps=rp.value; scheduleSave();};
+    const del=el("button",{class:"del"}); del.innerHTML=I.trash; del.onclick=()=>{ extra.sets.splice(i,1); scheduleSave(); renderAll(); };
+    r.appendChild(c); r.appendChild(rp); r.appendChild(del); sets.appendChild(r);
+  });
+  card.appendChild(sets);
+  const acts=el("div",{class:"set-actions"});
+  const add=el("button",{}); add.innerHTML=I.plus+" série"; add.onclick=()=>{ extra.sets.push({carga:"",reps:""}); scheduleSave(); renderAll(); };
+  acts.appendChild(add); card.appendChild(acts);
+  const obsW=el("div",{class:"obs"});
+  const ta=el("textarea",{placeholder:"Observações"}); ta.value=extra.obs||""; ta.oninput=()=>{extra.obs=ta.value; scheduleSave();};
+  obsW.appendChild(ta); card.appendChild(obsW);
+  return card;
+}
+
+function renderObsDia(){
+  const wrap=el("div",{class:"obs-dia"});
+  wrap.appendChild(el("div",{class:"sec-title"},"Observações da sessão"));
+  const ta=el("textarea",{placeholder:'Ex.: "deu 1h10 e faltaram 3 exercícios — ajustar quantidade" · como dormi · energia · dores · ajustes para a próxima vez'});
+  ta.value=state.sessao.observacao||"";
+  ta.oninput=()=>{ state.sessao.observacao=ta.value; scheduleSave(); };
+  wrap.appendChild(ta);
+  return wrap;
+}
+
+function renderFoot(){
+  const f=el("div",{class:"foot"});
+  const ic=el("span"); ic.innerHTML=I.alert; f.appendChild(ic.firstChild);
+  f.appendChild(el("div",{html:"<strong>Dados salvos localmente</strong> no IndexedDB do navegador. Há auto-backup diário em JSON na pasta de Downloads (1ª vez por dia que você abrir com dados). <strong>Exporte o JSON com regularidade</strong> para um pendrive/nuvem — limpar os dados do navegador apaga o IndexedDB. Use o <strong>CSV</strong> para abrir no Excel/Sheets ou jogar numa IA para analisar sua evolução."}));
+  return f;
+}
+
+// ---- calendar ----
+function renderCalendar(){
+  if(!state.calMonth){ const d=new Date(state.date+"T00:00:00"); state.calMonth={y:d.getFullYear(),m:d.getMonth()}; }
+  const pop=el("div",{class:"cal-pop"});
+  const cnav=el("div",{class:"cnav"});
+  cnav.appendChild(el("button",{class:"icon-btn",onclick:()=>{state.calMonth.m--; if(state.calMonth.m<0){state.calMonth.m=11;state.calMonth.y--;} renderAll();}},[mk(I.left)]));
+  const meses=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  cnav.appendChild(el("div",{class:"bold small"},`${meses[state.calMonth.m]} ${state.calMonth.y}`));
+  cnav.appendChild(el("button",{class:"icon-btn",onclick:()=>{state.calMonth.m++; if(state.calMonth.m>11){state.calMonth.m=0;state.calMonth.y++;} renderAll();}},[mk(I.right)]));
+  pop.appendChild(cnav);
+  const grid=el("div",{class:"cal-grid"});
+  ["D","S","T","Q","Q","S","S"].forEach(d=>grid.appendChild(el("div",{class:"dow"},d)));
+  const first=new Date(state.calMonth.y,state.calMonth.m,1);
+  const start=first.getDay();
+  const daysIn=new Date(state.calMonth.y,state.calMonth.m+1,0).getDate();
+  const comDados=new Set(state.cache.filter(s=>volumeSessao(s).setsCount>0 || (s.observacao&&s.observacao.trim())).map(s=>s.date));
+  for(let i=0;i<start;i++) grid.appendChild(el("div",{class:"cal-day outside"},""));
+  for(let d=1;d<=daysIn;d++){
+    const iso=`${state.calMonth.y}-${String(state.calMonth.m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const cls=["cal-day"]; if(iso===hojeISO())cls.push("today"); if(iso===state.date)cls.push("selected");
+    const cell=el("div",{class:cls.join(" "),onclick:()=>changeDate(iso)},String(d));
+    if(comDados.has(iso)) cell.appendChild(el("span",{class:"dot"}));
+    grid.appendChild(cell);
+  }
+  pop.appendChild(grid);
+  return pop;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+(async function init(){
+  // PWA: registra o service worker (abre offline) e pede armazenamento persistente.
+  if ("serviceWorker" in navigator) {
+    try { await navigator.serviceWorker.register("./sw.js", {scope:"./"}); } catch(e){ console.warn("SW:",e); }
+  }
+  if (navigator.storage && navigator.storage.persist) {
+    try { await navigator.storage.persist(); } catch(e){ /* silencioso */ }
+  }
+  state.cache = await dbGetAll();
+  await checkAutoBackup();
+  await changeDate(hojeISO());
+})();
+</script>
+</body>
+</html>
